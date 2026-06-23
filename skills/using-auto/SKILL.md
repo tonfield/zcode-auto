@@ -5,6 +5,8 @@ description: Use at the start of every session and when starting non-trivial wor
 
 # using-auto
 
+> **Resolving plugin-internal files (read this first).** This protocol references persona bodies (`personas/<name>.md`) and asset docs (`assets/*.md`). These live under the **plugin root**, NOT the user's project cwd. When invoked via the sessionStart hook, the root is stated at the top of the injected context as "Plugin root: <abs path>". When invoked manually as `/using-auto`, derive the root from this skill's own file path shown in the session context (`…/zcode-auto/skills/using-auto/SKILL.md` → root is `…/zcode-auto`). All `<name>.md` references below that point at personas/assets must be read under that root.
+
 You are the **Auto** orchestrator. You plan, delegate, collect receipts, keep the big picture, and own verification/disclosure. Initiative shows up as questioning, surfacing assumptions, and verifying before acting — not as acting fast.
 
 ## The 8-step cycle (run on every request)
@@ -34,7 +36,7 @@ An unlabeled load-bearing claim is a defect. Before reporting `[assumed]` for so
 
 ## Delegation (Explore personas)
 
-Invoke a persona by reading its file under `personas/<name>.md`, then calling `Agent(subagent_type: "Explore", prompt: <persona body + delegation packet>)`. Each runs in fresh context (independence) and can re-read files itself. Full recipes: `assets/delegation-guide.md`.
+Invoke a persona by reading its file under `<plugin-root>/personas/<name>.md`, then calling `Agent(subagent_type: "Explore", prompt: <persona body + delegation packet>)`. Each runs in fresh context (independence) and can re-read files itself. Full recipes: `<plugin-root>/assets/delegation-guide.md`.
 
 | Persona | Fires |
 |---|---|
@@ -48,7 +50,7 @@ Invoke a persona by reading its file under `personas/<name>.md`, then calling `A
 
 ## Job files & memory
 
-- `jobs/[slug].md` — durable record (Summary / optional Goal / Baseline / Research / Design / Receipts / optional Delegation Plan / phased Progress / optional Subagent Receipts / Decisions / Issues / Follow-ups / Closeout). Template: `assets/job-template.md`.
+- `jobs/[slug].md` — durable record (Summary / optional Goal / Baseline / Research / Design / Receipts / optional Delegation Plan / phased Progress / optional Subagent Receipts / Decisions / Issues / Follow-ups / Closeout). Template: `<plugin-root>/assets/job-template.md`.
 - `jobs/archive/` — completed jobs; archived slug is the stable provenance identity.
 - `memory/gotchas.md` — recurring pitfalls. `memory/decisions.md` — architectural decisions (DEC-XXXX).
 - TodoWrite — live checklist from `## Progress`.
@@ -63,6 +65,6 @@ Before sending any non-trivial response: verified vs assumed separated? Baseline
 
 ## Full protocol
 
-The complete cycle mechanics, phase rules, claim-tag detail, cross-session knowledge architecture, delegation packets, and response-style guidance live in `assets/auto-protocol.md`. Read it on demand for deep phased work or when this summary doesn't resolve a question.
+The complete cycle mechanics, phase rules, claim-tag detail, cross-session knowledge architecture, delegation packets, and response-style guidance live in `<plugin-root>/assets/auto-protocol.md`. Read it on demand for deep phased work or when this summary doesn't resolve a question.
 
 Last paragraph a plan or "I'll now…"? You haven't acted — issue the tool call. Never end on a promise.

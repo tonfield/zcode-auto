@@ -2,9 +2,11 @@
 
 How Auto invokes each persona in zcode-auto. ZCode has no first-class subagent types, so each persona is an **Explore call in a fresh context**, with the persona body + delegation packet as the prompt. That fresh context is the independence property that breaks self-review's ceiling; Explore's independent Read/Grep/Glob is what lets adversarial-reviewer re-verify against ground truth rather than trusting a summary.
 
+> **Path resolution (critical).** All `personas/<name>.md` and `assets/*.md` paths below are relative to the **plugin root**, not the user's project cwd. The plugin root is stated in the always-on session injection ("Plugin root: <abs path>"); if absent, derive it from the `using-auto` skill's file path shown in the session context. Always Read `<plugin-root>/personas/<name>.md` — a bare `personas/<name>.md` from a user project will fail to resolve.
+
 ## Canonical invocation
 
-1. **Read** `personas/<name>.md` to get the current persona body (keeps the prompt version-faithful and lets the persona evolve without rewriting the protocol).
+1. **Read** `<plugin-root>/personas/<name>.md` to get the current persona body (keeps the prompt version-faithful and lets the persona evolve without rewriting the protocol).
 2. Build the delegation packet (below).
 3. Call `Agent(subagent_type: "Explore", prompt: <persona body>\n\n---\n\n# Delegation packet\n\n<packet>)`.
 4. Inspect the return: `Status`, `Scope covered`, `Summary`, `Recommended next action` (for `patch-planner`, also `Actions taken` and `Verification run`). Reject out-of-scope results. Record accepted non-trivial results in `## Subagent Receipts`.
@@ -73,7 +75,7 @@ Read-only lanes may run in parallel — issue **multiple Agent calls in a single
 - **Provide:** Request (original user request or job `## Goal` condition) + evaluation mode (`active_item` | `phase_pass` | `job_goal`) + what was done + supporting context/evidence.
 - **Return:** Status (FULFILLED | NOT FULFILLED | BLOCKED) / Requirements met / Requirements unmet / Scope creep / Next action.
 - **Act:** `NOT FULFILLED` for active item/phase/no-job → restart at step 2. Overall job-goal `NOT FULFILLED` before Phase 5 Close → continue to Step 8 with the verdict, do not write `## Closeout`. `FULFILLED`/`BLOCKED` → continue.
-- **Note:** pure-model — it declines to use Read/Grep/Glob even though Explore offers them; its independence is judgment-only.
+- **Note:** pure-model — it must self-enforce not calling any tool (ZCode can't restrict Explore's tools per-call; the constraint is honor-based, restated at the top of the persona body). Its independence is judgment-only.
 
 ## Verifying persona output before trusting it
 

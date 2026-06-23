@@ -1,6 +1,6 @@
 # zcode-auto Job System (policy reference)
 
-The operational detail — the step-by-step cycle Auto runs — lives in `assets/auto-protocol.md`. This file is the policy reference: the rules, the job system, the persona and skill surface. It is adapted from opencode-auto's root `AGENTS.md`; `/job`/`/review`/`/init` are now ZCode skills, `delegate()` is now an Explore persona invocation, and `morph_edit` is now Edit/Write.
+The operational detail — the step-by-step cycle Auto runs — lives in `<plugin-root>/assets/auto-protocol.md`. This file is the policy reference: the rules, the job system, the persona and skill surface. It is adapted from opencode-auto's root `AGENTS.md`; `/job`/`/review`/`/init` are now ZCode skills, `delegate()` is now an Explore persona invocation, and `morph_edit` is now Edit/Write. All `assets/` paths below resolve under the plugin root, not the project cwd.
 
 ## 1. Core Protocol
 
@@ -43,10 +43,10 @@ Default behavior is the full Auto cycle. If the request is titled `URGENT` or cl
 When you encounter an unverified claim that can be settled with one or two tool calls (a web search, a doc read, a file check, a test run), verify it now rather than flagging it as a follow-up. This applies double when the unknown is load-bearing for a recommendation: never recommend based on an assumption you could have checked. If you're about to write "I haven't confirmed X" about something a single search would settle, stop and make the search instead.
 
 ### 1.13 Critical thinking
-Critical thinking is a lens on every step, not a separate phase. Apply the four concrete moves in `assets/auto-protocol.md §Critical Thinking` continuously: question the premise, surface uncertainty and trace claims, steel-man the opposite, pre-mortem non-trivial actions. Models self-critique poorly when asked vaguely and well when given concrete moves — use the concrete moves, and skip them only for trivial actions.
+Critical thinking is a lens on every step, not a separate phase. Apply the four concrete moves in `<plugin-root>/assets/auto-protocol.md §Critical Thinking` continuously: question the premise, surface uncertainty and trace claims, steel-man the opposite, pre-mortem non-trivial actions. Models self-critique poorly when asked vaguely and well when given concrete moves — use the concrete moves, and skip them only for trivial actions.
 
 ### 1.14 Simplicity
-Simplicity is a lens on every step, paired with critical thinking (§1.13). Apply the three moves in `assets/auto-protocol.md §Simplicity` continuously: stop at the first rung that holds (YAGNI → existing solution → one line → minimum), prefer deletion and default over addition, match the effort to the work. Lazy about effort, abstraction, and volume — never about correctness: do not simplify away verification and review gates, security, error handling, accessibility, or anything explicitly requested or protocol-mandated.
+Simplicity is a lens on every step, paired with critical thinking (§1.13). Apply the three moves in `<plugin-root>/assets/auto-protocol.md §Simplicity` continuously: stop at the first rung that holds (YAGNI → existing solution → one line → minimum), prefer deletion and default over addition, match the effort to the work. Lazy about effort, abstraction, and volume — never about correctness: do not simplify away verification and review gates, security, error handling, accessibility, or anything explicitly requested or protocol-mandated.
 
 ---
 
@@ -56,11 +56,11 @@ Simplicity is a lens on every step, paired with critical thinking (§1.13). Appl
 A job is the unit of work; TodoWrite tracks its steps. One file per job at `jobs/[slug].md`. The file is the single durable record. Always use a job file for non-trivial work. Create with `/job <slug>`; switch between jobs freely.
 
 ### 2.2 Job file structure
-See `assets/job-template.md` for the canonical structure: Summary, optional Goal, Baseline (with Protocol version), Research, Design, Receipts, optional Delegation Plan, phase-grouped Progress, optional Subagent Receipts, Decisions, Issues, Follow-ups, Closeout. The phase-grouped Progress organizes work into phases with pass conditions and status markers; Auto scopes to one phase at a time while delegating safe lanes.
+See `<plugin-root>/assets/job-template.md` for the canonical structure: Summary, optional Goal, Baseline (with Protocol version), Research, Design, Receipts, optional Delegation Plan, phase-grouped Progress, optional Subagent Receipts, Decisions, Issues, Follow-ups, Closeout. The phase-grouped Progress organizes work into phases with pass conditions and status markers; Auto scopes to one phase at a time while delegating safe lanes.
 
 ### 2.3 Job lifecycle
 1. Create: Auto's Decompose step (Step 0) creates a populated job file for complex requests. Manual fallback: `/job <slug>` creates a blank template.
-2. Work: Auto orchestrates the cycle (see `assets/auto-protocol.md`) for each phase, delegating safe lanes, collecting receipts, verifying outputs, and advancing the Progress checklist.
+2. Work: Auto orchestrates the cycle (see `<plugin-root>/assets/auto-protocol.md`) for each phase, delegating safe lanes, collecting receipts, verifying outputs, and advancing the Progress checklist.
 3. Review: `/review` checks changes, upserts actionable findings to `## Issues` by match key.
 4. Close: When Progress is fully checked and any `## Goal` is fulfilled or explicitly blocked, Auto writes the disclosure into `## Closeout`, moves the job to `jobs/archive/`, and consolidates any reusable lesson to `memory/` with provenance checked.
 
@@ -91,7 +91,7 @@ See `assets/job-template.md` for the canonical structure: Summary, optional Goal
 - With an active job, actionable findings go into `## Issues` with the reviewer's match key and severity.
 - Standalone reviews (`/review --files ...`) stay in chat only.
 - Reviews never create review artifact files.
-- Firing conditions for `reviewer`, `adversarial-reviewer`, and `goal-evaluator` live in `assets/auto-protocol.md` (§5 Review, §7 Goal check); see there rather than restating here.
+- Firing conditions for `reviewer`, `adversarial-reviewer`, and `goal-evaluator` live in `<plugin-root>/assets/auto-protocol.md` (§5 Review, §7 Goal check); see there rather than restating here.
 
 ---
 
@@ -100,7 +100,7 @@ See `assets/job-template.md` for the canonical structure: Summary, optional Goal
 - Prefer the cheapest precise tool first: Read/Grep/Glob for known files, structural Grep patterns for structural invariants, WebSearch/WebFetch for external evidence (or delegate to the `docs-research` persona).
 - Do not use web search just because it exists. Use it when it improves evidence quality.
 - The main agent may use Read/Grep/Glob/Edit/Write/Bash/WebSearch/WebFetch. Ask before destructive, credentialed, or ambiguous operations.
-- Delegation safety (read-only personas, advisory output, parallel/serialized lanes) is documented in `assets/auto-protocol.md` Delegation and `assets/delegation-guide.md`; see there.
+- Delegation safety (read-only personas, advisory output, parallel/serialized lanes) is documented in `<plugin-root>/assets/auto-protocol.md` Delegation and `<plugin-root>/assets/delegation-guide.md`; see there.
 
 ---
 
@@ -117,7 +117,7 @@ See `assets/job-template.md` for the canonical structure: Summary, optional Goal
 
 ## 8. Persona Surface
 
-The eight personas (`repo-search`, `docs-research`, `impact-mapper`, `test-strategist`, `patch-planner`, `reviewer`, `adversarial-reviewer`, `goal-evaluator`) are documented in `assets/auto-protocol.md` (Delegation table) and `assets/delegation-guide.md` (invocation recipes). Each runs as an independent Explore call.
+The eight personas (`repo-search`, `docs-research`, `impact-mapper`, `test-strategist`, `patch-planner`, `reviewer`, `adversarial-reviewer`, `goal-evaluator`) are documented in `<plugin-root>/assets/auto-protocol.md` (Delegation table) and `<plugin-root>/assets/delegation-guide.md` (invocation recipes). Each runs as an independent Explore call.
 
 ---
 

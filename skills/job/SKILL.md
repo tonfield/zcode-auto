@@ -17,7 +17,7 @@ Behavior:
    - Announce active job.
 4. If it does not exist:
    - Ensure `jobs/` directory exists.
-   - Create `jobs/[slug].md` from the job template (`assets/job-template.md`).
+   - Create `jobs/[slug].md` from the job template (resolve `<plugin-root>/assets/job-template.md` — the plugin root is derivable from this skill's own file path or stated in the always-on session injection; `jobs/` itself lives in the user's project cwd).
    - Replace the placeholder slug in `# job-slug`.
    - Seed `## Summary` from any context the user provided.
    - Note: Auto's Decompose step creates populated jobs during complex requests — a blank template is only a manual fallback. If you're mid-request, let Auto decompose instead.

@@ -2,20 +2,21 @@
 # SessionStart hook for the zcode-auto plugin.
 #
 # Injects the compact Auto protocol (the using-auto skill body) into every
-# session start so the orchestrator behavior is always on, mirroring how
-# superpowers injects using-superpowers. Self-derives the plugin root from the
-# script's own location (does not rely on a platform env var being set).
+# session start so the orchestrator behavior is always on. Self-derives the
+# plugin root from the script's own location.
+#
+# CRITICAL: the agent's cwd at session start is the USER'S PROJECT, not the
+# plugin root. The skill bodies reference sibling files (personas/<name>.md,
+# assets/*.md) as bare relative paths, which would resolve against the user's
+# project and fail. This hook is the one place that knows the absolute plugin
+# root at inject time, so it rewrites those tokens to absolute paths in the
+# injected context. See assets/delegation-guide.md (path resolution note).
 #
 # Output contract (per platform), to stdout as JSON:
 #   - Cursor (CURSOR_PLUGIN_ROOT set):          additional_context (snake_case)
 #   - Claude Code (CLAUDE_PLUGIN_ROOT set,
 #                  COPILOT_CLI unset):          hookSpecificOutput.additionalContext
 #   - ZCode / Copilot CLI / SDK standard:       additionalContext (top-level)
-#
-# ZCode's exact hook env vars are undocumented in the plugin cache; this script
-# follows superpowers' branching logic and falls through to the SDK-standard
-# top-level field. If no branch injects, the using-auto skill is still manually
-# invocable as /using-auto.
 
 set -euo pipefail
 
@@ -24,12 +25,23 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 SKILL_FILE="${PLUGIN_ROOT}/skills/using-auto/SKILL.md"
 if [ ! -f "$SKILL_FILE" ]; then
-  # Nothing to inject — fail closed without breaking the session.
+  # Fail closed without breaking the session, but leave a breadcrumb so a
+  # mis-installed plugin is diagnosable instead of silently inert.
+  echo "zcode-auto: using-auto SKILL.md not found at $SKILL_FILE" >&2
   exit 0
 fi
 
-# Read the skill body (everything after the YAML frontmatter).
-SKILL_BODY=$(sed '1,/^---$/d; /^---$/,$d' "$SKILL_FILE" 2>/dev/null || cat "$SKILL_FILE")
+# Inject the whole file (frontmatter included — harmless inside the IMPORTANT
+# block, and avoids the fragile sed frontmatter-strip that would truncate on
+# any future "---" horizontal rule in the body).
+SKILL_BODY=$(cat "$SKILL_FILE")
+
+# Substitute the <plugin-root> placeholder (used throughout the skill bodies
+# and assets) with the absolute plugin root. The agent's cwd is the user's
+# project; without this, references to personas/ or assets/ would resolve under
+# the project and fail. Using a placeholder token avoids shell-quoting traps
+# with literal slashes in ${var//pattern/replacement}.
+SKILL_BODY="${SKILL_BODY//<plugin-root>/${PLUGIN_ROOT}}"
 
 # Escape the body for JSON embedding.
 escape_for_json() {
@@ -44,7 +56,9 @@ escape_for_json() {
 
 ESCAPED=$(escape_for_json "$SKILL_BODY")
 
-SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\nYou are running the zcode-auto plugin. Below is your Auto orchestrator protocol — the always-on summary of the 8-step cycle, the critical-thinking and simplicity lenses, claim tags, delegation to Explore personas, and the job-file system. Apply it to every request.\n\n${ESCAPED}\n\nFull protocol detail (cycle mechanics, phase rules, cross-session knowledge architecture, delegation recipes): read assets/auto-protocol.md and assets/delegation-guide.md on demand.\n</EXTREMELY_IMPORTANT>"
+# The absolute root is also stated explicitly so the agent can resolve any
+# other plugin-internal path it discovers (e.g. from a skill description).
+SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\nYou are running the zcode-auto plugin. Below is your Auto orchestrator protocol — the always-on summary of the 8-step cycle, the critical-thinking and simplicity lenses, claim tags, delegation to Explore personas, and the job-file system. Apply it to every request.\n\nPlugin root (resolve all plugin-internal files under here, NOT the project cwd): ${PLUGIN_ROOT}\n\n${ESCAPED}\n\nFull protocol detail (cycle mechanics, phase rules, cross-session knowledge architecture, delegation recipes): read ${PLUGIN_ROOT}/assets/auto-protocol.md and ${PLUGIN_ROOT}/assets/delegation-guide.md on demand.\n</EXTREMELY_IMPORTANT>"
 
 # Emit the per-platform JSON shape. Uses printf to avoid heredoc quirks.
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then

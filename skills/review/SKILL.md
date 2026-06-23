@@ -5,7 +5,9 @@ description: Use to run a focused code review via the reviewer persona — accep
 
 # review
 
-Run a focused review using the **reviewer persona** (invoked as an independent Explore context — see `personas/reviewer.md` and `assets/delegation-guide.md`).
+> **Resolving plugin-internal files:** this skill references `personas/<name>.md` and `assets/*.md`, which live under the **plugin root** — NOT the project cwd. Derive the plugin root from this skill's own file path (shown in the session context, e.g. `…/zcode-auto/skills/review/SKILL.md` → root is `…/zcode-auto`), or read it from the always-on session injection ("Plugin root: …"). Then read e.g. `<plugin-root>/personas/reviewer.md`.
+
+Run a focused review using the **reviewer persona** (invoked as an independent Explore context — see `<plugin-root>/personas/reviewer.md` and `<plugin-root>/assets/delegation-guide.md`).
 
 Accepted forms:
 - `/review`
