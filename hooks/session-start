@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# SessionStart hook for the zcode-auto plugin.
+#
+# Injects the compact Auto protocol (the using-auto skill body) into every
+# session start so the orchestrator behavior is always on, mirroring how
+# superpowers injects using-superpowers. Self-derives the plugin root from the
+# script's own location (does not rely on a platform env var being set).
+#
+# Output contract (per platform), to stdout as JSON:
+#   - Cursor (CURSOR_PLUGIN_ROOT set):          additional_context (snake_case)
+#   - Claude Code (CLAUDE_PLUGIN_ROOT set,
+#                  COPILOT_CLI unset):          hookSpecificOutput.additionalContext
+#   - ZCode / Copilot CLI / SDK standard:       additionalContext (top-level)
+#
+# ZCode's exact hook env vars are undocumented in the plugin cache; this script
+# follows superpowers' branching logic and falls through to the SDK-standard
+# top-level field. If no branch injects, the using-auto skill is still manually
+# invocable as /using-auto.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+SKILL_FILE="${PLUGIN_ROOT}/skills/using-auto/SKILL.md"
+if [ ! -f "$SKILL_FILE" ]; then
+  # Nothing to inject — fail closed without breaking the session.
+  exit 0
+fi
+
+# Read the skill body (everything after the YAML frontmatter).
+SKILL_BODY=$(sed '1,/^---$/d; /^---$/,$d' "$SKILL_FILE" 2>/dev/null || cat "$SKILL_FILE")
+
+# Escape the body for JSON embedding.
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
+ESCAPED=$(escape_for_json "$SKILL_BODY")
+
+SESSION_CONTEXT="<EXTREMELY_IMPORTANT>\nYou are running the zcode-auto plugin. Below is your Auto orchestrator protocol — the always-on summary of the 8-step cycle, the critical-thinking and simplicity lenses, claim tags, delegation to Explore personas, and the job-file system. Apply it to every request.\n\n${ESCAPED}\n\nFull protocol detail (cycle mechanics, phase rules, cross-session knowledge architecture, delegation recipes): read assets/auto-protocol.md and assets/delegation-guide.md on demand.\n</EXTREMELY_IMPORTANT>"
+
+# Emit the per-platform JSON shape. Uses printf to avoid heredoc quirks.
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$SESSION_CONTEXT"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$SESSION_CONTEXT"
+else
+  # ZCode / Copilot CLI / SDK standard — top-level additionalContext.
+  printf '{\n  "additionalContext": "%s"\n}\n' "$SESSION_CONTEXT"
+fi
+
+exit 0

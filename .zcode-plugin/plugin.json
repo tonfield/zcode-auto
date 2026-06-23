@@ -1,0 +1,14 @@
+{
+  "name": "zcode-auto",
+  "version": "0.1.0",
+  "description": "Orchestration-first Auto protocol for ZCode — phased work records, critical-thinking + simplicity lenses, verification protocol, and independent-context personas invoked via Explore.",
+  "author": {
+    "name": "Ton",
+    "url": "https://github.com/tonfield"
+  },
+  "homepage": "https://github.com/tonfield/zcode-auto",
+  "repository": "https://github.com/tonfield/zcode-auto",
+  "license": "MIT",
+  "skills": "skills",
+  "hooks": "hooks"
+}

@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Managed: opencode-style local job surfaces
+# (root-anchored — keeps this repo's own job records local while
+#  project-template/jobs/ stays trackable for downstream copies)
+# BEGIN zcode-auto job surfaces
+/jobs/
+# END zcode-auto job surfaces
+
+# Runtime / state
+*.log
+*.bak
+node_modules/
