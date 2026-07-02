@@ -1,6 +1,6 @@
 # Delegation Guide
 
-How Auto invokes each persona in zcode-auto. ZCode has no first-class subagent types, so each persona is an **Explore call in a fresh context**, with the persona body + delegation packet as the prompt. That fresh context is the independence property that breaks self-review's ceiling; Explore's independent Read/Grep/Glob is what lets adversarial-reviewer re-verify against ground truth rather than trusting a summary.
+How Auto invokes each persona in zcode-auto. ZCode has no first-class subagent types, so each persona is an **Explore call in a fresh context**, with the persona body + delegation packet as the prompt. That fresh context is the independence property that breaks self-review's ceiling; Explore's independent Read/Grep/Glob/Bash is what lets adversarial-reviewer re-verify against ground truth — re-reading files and reproducing read-only gates itself — rather than trusting a summary.
 
 > **Path resolution (critical).** All `personas/<name>.md` and `assets/*.md` paths below are relative to the **plugin root**, not the user's project cwd. The plugin root is stated in the always-on session injection ("Plugin root: <abs path>"); if absent, derive it from the `using-auto` skill's file path shown in the session context. Always Read `<plugin-root>/personas/<name>.md` — a bare `personas/<name>.md` from a user project will fail to resolve.
 
@@ -66,16 +66,17 @@ Read-only lanes may run in parallel — issue **multiple Agent calls in a single
 
 ### adversarial-reviewer
 - **When:** mandatory on the default non-urgent path at job Phase 4 Verify and at no-job durable-change closeout; on demand earlier when the standard reviewer may have missed blind spots.
-- **Provide:** target files/diff + job `## Design`, `## Research`, `## Receipts` + any verification output already run.
+- **Provide:** target files/diff + job `## Design`, `## Research`, `## Receipts` + any verification output already run + the gate command(s) it may reproduce.
 - **Return:** Status / Scope covered / Summary / Findings (numbered: trap · proof · severity · fix) / Job issue updates / Recommended next action.
 - **Act:** fix accepted findings, re-verify. If `Status: passed`, proceed.
+- **Note:** may run read-only verification commands itself (tests, builds, linters, git inspection) — independently reproducing the gate is stronger evidence than a pasted result. Mutation is prohibited (honor-based; restated in the persona body).
 
 ### goal-evaluator
 - **When:** **every non-urgent turn** (Step 7).
 - **Provide:** Request (original user request or job `## Goal` condition) + evaluation mode (`active_item` | `phase_pass` | `job_goal`) + what was done + supporting context/evidence.
 - **Return:** Status (FULFILLED | NOT FULFILLED | BLOCKED) / Requirements met / Requirements unmet / Scope creep / Next action.
 - **Act:** `NOT FULFILLED` for active item/phase/no-job → restart at step 2. Overall job-goal `NOT FULFILLED` before Phase 5 Close → continue to Step 8 with the verdict, do not write `## Closeout`. `FULFILLED`/`BLOCKED` → continue.
-- **Note:** pure-model — it must self-enforce not calling any tool (ZCode can't restrict Explore's tools per-call; the constraint is honor-based, restated at the top of the persona body). Its independence is judgment-only.
+- **Note:** near-pure judge — it may Read only the files the parent explicitly names (name the job file in the packet so it can check `## Goal`/`## Progress` against the claims), and must self-enforce no search/shell/web (ZCode can't restrict Explore's tools per-call; the constraint is honor-based, restated at the top of the persona body). The scoped Read lets it catch a misleading evidence packet instead of rubber-stamping it.
 
 ## Verifying persona output before trusting it
 

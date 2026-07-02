@@ -51,6 +51,22 @@ SKILL_BODY=$(cat "$SKILL_FILE")
 # with literal slashes in ${var//pattern/replacement}.
 SKILL_BODY="${SKILL_BODY//<plugin-root>/${PLUGIN_ROOT}}"
 
+# Deterministic gotchas injection. ZCode spawns hooks with cwd = the user's
+# project, so a project-local memory/gotchas.md can be appended here instead of
+# relying on the agent remembering to read it on session start — and it
+# re-survives compaction, since the hook re-fires on Startup/Clear/Compact.
+# Keep the file short: it is a per-session context cost.
+GOTCHAS_FILE="${PWD}/memory/gotchas.md"
+if [ -f "$GOTCHAS_FILE" ]; then
+  SKILL_BODY="${SKILL_BODY}
+
+---
+
+# Project gotchas (memory/gotchas.md — injected deterministically; read, don't re-read)
+
+$(cat "$GOTCHAS_FILE")"
+fi
+
 # Escape the body for JSON embedding.
 escape_for_json() {
   local s="$1"

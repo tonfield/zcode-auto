@@ -66,8 +66,8 @@ That drops in a project `AGENTS.md`, a `memory/` skeleton (README/decisions/gotc
 | `test-strategist` | Recommends verification gates | When gates are unclear |
 | `patch-planner` | Designs bounded edits (parent applies) | On demand |
 | `reviewer` | Code review with 11 lenses | Every code-change turn + Phase 4 |
-| `adversarial-reviewer` | Ground-truth scrutiny, tries to break it | Phase 4 + durable-change closeout |
-| `goal-evaluator` | Pure-model completeness check | Every non-urgent turn |
+| `adversarial-reviewer` | Ground-truth scrutiny — re-reads files, reproduces read-only gates itself, tries to break it | Phase 4 + durable-change closeout |
+| `goal-evaluator` | Near-pure completeness check (reads only caller-named files) | Every non-urgent turn |
 
 See [`assets/delegation-guide.md`](assets/delegation-guide.md) for the Explore-invocation recipe per persona.
 
